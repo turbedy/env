@@ -1,0 +1,39 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      extra-rules: true
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - errorlint
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unconvert
+    - unused
+  exclusions:
+    rules:
+      - text: Error return value of .*([Pp]rint(f|ln)?|[Ff]print(f|ln)?).* is not checked
+        linters:
+          - errcheck
+      - path: _test\.go
+        linters:
+          - errcheck
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  show-stats: false
+
+run:
+  timeout: 12m

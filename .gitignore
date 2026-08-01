@@ -1,0 +1,6 @@
+# Use other ways to exclude files created
+# by your local environment (e.g., IDE or OS)
+
+# Go test artifacts
+*.test
+*.out
