@@ -153,11 +153,72 @@ func (c *cache) loadDecoder(t reflect.Type) decoderFunc {
 			decoder = floatDecoder(32)
 		case reflect.Float64:
 			decoder = floatDecoder(64)
+		case reflect.Struct:
+			decoder = structDecoder(t)
+		case reflect.Pointer:
+			et := t.Elem()
+			edecoder := c.loadDecoder(et)
+			if edecoder == nil {
+				break
+			}
+			decoder = pointerDecoder(et, edecoder)
+		case reflect.Slice, reflect.Array, reflect.Map:
+			et := t.Elem()
+			if !isValue(et) {
+				break
+			}
+			edecoder := c.loadDecoder(et)
+			if edecoder == nil {
+				break
+			}
+
+			if t.Kind() == reflect.Slice {
+				decoder = sliceDecoder(t, et, edecoder)
+				break
+			}
+			if t.Kind() == reflect.Array {
+				decoder = arrayDecoder(t, et, edecoder)
+				break
+			}
+
+			kt := t.Key()
+			if !isValue(kt) {
+				break
+			}
+			kdecoder := c.loadDecoder(kt)
+			if kdecoder == nil {
+				break
+			}
+			decoder = mapDecoder(t, kt, et, kdecoder, edecoder)
 		}
 	}
 
 	c.decoders[t] = decoder
 	return decoder
+}
+
+func isValue(t reflect.Type) bool {
+	for t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	switch t.Kind() {
+	case reflect.String:
+		return true
+	case reflect.Bool:
+		return true
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	case reflect.Float32, reflect.Float64:
+		return true
+	case reflect.Slice, reflect.Array, reflect.Map:
+		return true
+	case reflect.Struct:
+		return isUnmarshaler(t)
+	default:
+		return false
+	}
 }
 
 func isUnmarshaler(t reflect.Type) bool {
