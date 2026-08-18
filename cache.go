@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // TypeError represents a failed schema validation.
@@ -34,8 +35,6 @@ type cache struct {
 	metadata map[reflect.Type]metadata
 	decoders map[reflect.Type]decoderFunc
 }
-
-var unmarshalerType = reflect.TypeFor[encoding.TextUnmarshaler]()
 
 func (c *cache) loadFields(t reflect.Type) ([]field, error) {
 	metadata, ok := c.metadata[t]
@@ -123,10 +122,38 @@ build:
 	return metadata.fields, metadata.err
 }
 
+var (
+	unmarshalerType = reflect.TypeFor[encoding.TextUnmarshaler]()
+	durationType    = reflect.TypeFor[time.Duration]()
+)
+
 func (c *cache) loadDecoder(t reflect.Type) decoderFunc {
 	decoder, ok := c.decoders[t]
 	if ok {
 		return decoder
+	}
+
+	if t.Kind() != reflect.Pointer && reflect.PointerTo(t).Implements(unmarshalerType) {
+		decoder = addrUnmarshalerDecoder(t)
+	} else if t.Implements(unmarshalerType) {
+		decoder = unmarshalerDecoder(t)
+	} else if t == durationType {
+		decoder = durationDecoder
+	} else {
+		switch t.Kind() {
+		case reflect.String:
+			decoder = stringDecoder
+		case reflect.Bool:
+			decoder = boolDecoder
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			decoder = intDecoder(t.Bits())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			decoder = uintDecoder(t.Bits())
+		case reflect.Float32:
+			decoder = floatDecoder(32)
+		case reflect.Float64:
+			decoder = floatDecoder(64)
+		}
 	}
 
 	c.decoders[t] = decoder
