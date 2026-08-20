@@ -31,10 +31,10 @@ type Config struct {
 
 Set environment variables:
 ```bash
-HTTP_HOST=::1
-HTTP_PORT=80
-HTTP_HEADERS=Content-Type:application/json,Cache-Control:no-cache
-IPV6_ENABLED=true
+export HTTP_HOST=::1
+export HTTP_PORT=80
+export HTTP_HEADERS=Content-Type:application/json,Cache-Control:no-cache
+export IPV6_ENABLED=true
 ```
 
 Map environment variables to exported fields:
