@@ -3,6 +3,7 @@ package env
 import (
 	"errors"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -91,6 +92,62 @@ func TestDecode_Scalars(t *testing.T) {
 			if got != *tt.want {
 				t.Fatalf("Decode() = %+v, want %+v", got, *tt.want)
 			}
+		})
+	}
+}
+
+func TestDecode_Collections(t *testing.T) {
+	type Collections struct {
+		Map              map[bool]bool
+		Slice            []time.Time
+		Array            [3]time.Duration
+		MapWithEscapes   map[string]string
+		SliceWithEscapes [][]int
+		ArrayWithEscapes [2][2]uint
+	}
+
+	tests := []struct {
+		name  string
+		key   string
+		value string
+		want  *Collections
+	}{
+		{"map", "MAP", "true:false,false:true", &Collections{Map: map[bool]bool{true: false, false: true}}},
+		{
+			"slice",
+			"SLICE", "2026-08-19T10:00:00Z,2026-08-20T10:00:00Z",
+			&Collections{Slice: []time.Time{time.Date(2026, 8, 19, 10, 0, 0, 0, time.UTC), time.Date(2026, 8, 20, 10, 0, 0, 0, time.UTC)}},
+		},
+		{"array", "ARRAY", "8s,16m,32h", &Collections{Array: [3]time.Duration{8 * time.Second, 16 * time.Minute, 32 * time.Hour}}},
+
+		{"map with escapes", "MAP_WITH_ESCAPES", `\\\:\\:\\\\`, &Collections{MapWithEscapes: map[string]string{`\:\`: `\\\\`}}},
+		{"slice with escapes", "SLICE_WITH_ESCAPES", `-1\,-2,-3`, &Collections{SliceWithEscapes: [][]int{{-1, -2}, {-3}}}},
+		{"array with escapes", "ARRAY_WITH_ESCAPES", `1\,2,3\,4`, &Collections{ArrayWithEscapes: [2][2]uint{{1, 2}, {3, 4}}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv(tt.key, tt.value)
+			var got Collections
+			err := Decode(&got)
+			if tt.want == nil {
+				var valueErr *ValueError
+				if !errors.As(err, &valueErr) {
+					t.Fatalf("Decode() error = %T, want *ValueError", err)
+				}
+				if valueErr.Key != tt.key {
+					t.Fatalf("Decode() error = *ValueError{Key:%v}, want *ValueError{Key:%v}", valueErr.Key, tt.key)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Decode() error = %T, want nil", err)
+			}
+			if !reflect.DeepEqual(got, *tt.want) {
+				t.Fatalf("Decode() = %+v, want %+v", got, *tt.want)
+			}
+
+			t.Log(got)
 		})
 	}
 }
