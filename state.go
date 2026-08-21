@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-var ErrCollection = errors.New("invalid collection")
-
 // ValueError represents a failed value conversion.
 type ValueError struct {
 	Key  string
@@ -288,7 +286,7 @@ func arrayDecoder(t, et reflect.Type, edecoder decoderFunc) decoderFunc {
 				s.out.Set(reflect.New(t).Elem())
 				return true
 			}
-			s.err = ErrCollection
+			s.err = strconv.ErrSyntax
 			return false
 		}
 
@@ -312,12 +310,12 @@ func arrayDecoder(t, et reflect.Type, edecoder decoderFunc) decoderFunc {
 			}
 			v.Index(i).Set(s.out)
 			if !ok && i != t.Len()-1 {
-				s.err = ErrCollection
+				s.err = strconv.ErrSyntax
 				return false
 			}
 		}
 		if elems != "" {
-			s.err = ErrCollection
+			s.err = strconv.ErrSyntax
 			return false
 		}
 		out.Set(v)
@@ -347,7 +345,7 @@ func mapDecoder(t, kt, et reflect.Type, kdecoder, edecoder decoderFunc) decoderF
 			s.in, items, ok = cut(items, s.isep)
 			key, elem, pair := cut(s.in, s.psep)
 			if !pair {
-				s.err = ErrCollection
+				s.err = strconv.ErrSyntax
 				return false
 			}
 
