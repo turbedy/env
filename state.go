@@ -14,18 +14,12 @@ var ErrCollection = errors.New("invalid collection")
 
 // ValueError represents a failed value conversion.
 type ValueError struct {
-	Key   string
-	Value string
-	Type  reflect.Type
-	Err   error
+	Key  string
+	Type reflect.Type
 }
 
 func (e *ValueError) Error() string {
-	return "env: " + e.Key + ": parsing " + strconv.Quote(e.Value) + " as " + e.Type.String() + ": " + e.Err.Error()
-}
-
-func (e *ValueError) Unwrap() error {
-	return e.Err
+	return "env: " + e.Key + ": cannot parse as " + e.Type.String()
 }
 
 type state struct {
@@ -181,7 +175,7 @@ func structDecoder(t reflect.Type) decoderFunc {
 				var typeErr *TypeError
 				var valueErr *ValueError
 				if !errors.As(s.err, &keyErr) && !errors.As(s.err, &typeErr) && !errors.As(s.err, &valueErr) {
-					s.err = &ValueError{s.key.string(), s.in, s.out.Type(), s.err}
+					s.err = &ValueError{s.key.string(), s.out.Type()}
 				}
 			}
 		}()
