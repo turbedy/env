@@ -82,7 +82,7 @@ func WithSeparator(sep string) Option {
 //	`env:",inline"`
 //
 //	// Marks the field as required.
-//	`env:",required"`
+//	`env:",require"`
 func Decode(v any, opts ...Option) error {
 	s := &state{
 		key:  key{sep: []byte{'_'}},

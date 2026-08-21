@@ -53,7 +53,7 @@ func (s *state) push(f field) {
 	s.seen[f.typ] = struct{}{}
 	s.typs = append(s.typs, f.typ)
 
-	if f.required && s.req < 0 {
+	if f.require && s.req < 0 {
 		s.req = len(s.typs)
 	}
 	s.key.push(f.segment)
