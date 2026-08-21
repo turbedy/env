@@ -5,39 +5,33 @@
 
 A Go package for mapping environment variables to structs.
 
-## Usage
+## Getting started
 Install the package:
 ```bash
 go get github.com/turbedy/env
 ```
 
-Define nested structs:
+Define a struct:
 ```go
 type Address struct {
     Host string
     Port int
 }
 
-type Server struct {
-    Address
-    Headers map[string]string
-}
-
 type Config struct {
-    HTTP Server
+    HTTP Address
     IPv6Enabled bool
 }
 ```
 
 Set environment variables:
 ```bash
-export HTTP_HOST=::1
+export HTTP_HOST=::
 export HTTP_PORT=80
-export HTTP_HEADERS=Content-Type:application/json,Cache-Control:no-cache
 export IPV6_ENABLED=true
 ```
 
-Map environment variables to exported fields:
+Map environment variables:
 ```go
 var cfg Config
 if err := env.Decode(&cfg); err != nil {

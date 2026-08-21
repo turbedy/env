@@ -28,6 +28,7 @@ func WithPrefix(prefix string) Option {
 }
 
 // WithSeparator sets the separator between segments of environment keys.
+// The separator must match `^[A-Z0-9_]+$`.
 func WithSeparator(sep string) Option {
 	return func(s *state) error {
 		if sep == "" {
@@ -43,21 +44,24 @@ func WithSeparator(sep string) Option {
 	}
 }
 
-// Decode maps environment variables to the exported fields of v.
+// Decode maps environment variables to the fields of v.
+// Unexported fields are ignored, but exported fields of
+// embedded structs are considered.
 //
 // Environment keys consist of segments joined by a separator.
-// The separator is '_', and each segment must match '^[A-Z_][A-Z0-9_]*$'.
+// The default separator is `_`, and each segment must match `^[A-Z_][A-Z0-9_]*$`.
 //
-// Embedded fields have no segment. Otherwise, segments are generated
-// from field names as follows:
+// Segments are generated from non-embedded field names as follows:
+//   - A name must match `^[A-Z][a-zA-Z0-9]*$`.
+//   - `_` is inserted between a digit and the following letter.
+//   - `_` is inserted between a lowercase letter and the following uppercase letter.
+//   - `_` is inserted before the last uppercase letter in a sequence of uppercase
+//     letters followed by a lowercase letter, unless it is followed by v and a digit.
 //   - Lowercase letters are converted to uppercase.
-//   - '_' is inserted between lowercase letters and following uppercase letters.
-//   - '_' is inserted between digits and following letters.
-//   - '_' is inserted between acronyms and following words.
 //
-// Exported fields are only changed when environment variables are defined.
-// If a field implements [encoding.TextUnmarshaler], Decode uses
-// [encoding.TextUnmarshaler.UnmarshalText] as parser.
+// Fields are only changed when environment variables are defined.
+// If a field implements [encoding.TextUnmarshaler], uses
+// [encoding.TextUnmarshaler.UnmarshalText] method as parser.
 //
 // Otherwise, uses the following type-dependent parsers:
 //   - [time.ParseDuration] for [time.Duration].
@@ -66,9 +70,9 @@ func WithSeparator(sep string) Option {
 //   - [strconv.ParseUint] for unsigned integers.
 //   - [strconv.ParseFloat] for floating points.
 //
-// These parsers are also used in collections, where items separator is ',',
-// and pairs separator is ':'. Separators can be escaped with a backslash,
-// including backslashes before separators.
+// These parsers are also used in collections, which can be nested.
+// Collection elements are separated by `,` and pairs by `:`.
+// Use a backslash to escape separators, including backslashes before separators.
 //
 // The following struct tags are currently supported:
 //
@@ -78,7 +82,7 @@ func WithSeparator(sep string) Option {
 //	// Specifies a custom segment for the field.
 //	`env:"SEGMENT"`
 //
-//	// Marks the field as having no segment.
+//	// Marks the field as embedded.
 //	`env:",inline"`
 //
 //	// Marks the field as required.
