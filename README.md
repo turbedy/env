@@ -8,7 +8,7 @@ A Go package for mapping environment variables to structs.
 ## Getting started
 Install the package:
 ```bash
-go get github.com/turbedy/env
+go get github.com/turbedy/env/v2
 ```
 
 Define a struct:
