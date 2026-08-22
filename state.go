@@ -10,22 +10,14 @@ import (
 	"time"
 )
 
-var ErrCollection = errors.New("invalid collection")
-
 // ValueError represents a failed value conversion.
 type ValueError struct {
-	Key   string
-	Value string
-	Type  reflect.Type
-	Err   error
+	Key  string
+	Type reflect.Type
 }
 
 func (e *ValueError) Error() string {
-	return "env: " + e.Key + ": parsing " + strconv.Quote(e.Value) + " as " + e.Type.String() + ": " + e.Err.Error()
-}
-
-func (e *ValueError) Unwrap() error {
-	return e.Err
+	return "env: " + e.Key + ": cannot parse as " + e.Type.String()
 }
 
 type state struct {
@@ -53,7 +45,7 @@ func (s *state) push(f field) {
 	s.seen[f.typ] = struct{}{}
 	s.typs = append(s.typs, f.typ)
 
-	if f.required && s.req < 0 {
+	if f.require && s.req < 0 {
 		s.req = len(s.typs)
 	}
 	s.key.push(f.segment)
@@ -181,7 +173,7 @@ func structDecoder(t reflect.Type) decoderFunc {
 				var typeErr *TypeError
 				var valueErr *ValueError
 				if !errors.As(s.err, &keyErr) && !errors.As(s.err, &typeErr) && !errors.As(s.err, &valueErr) {
-					s.err = &ValueError{s.key.string(), s.in, s.out.Type(), s.err}
+					s.err = &ValueError{s.key.string(), s.out.Type()}
 				}
 			}
 		}()
@@ -294,7 +286,7 @@ func arrayDecoder(t, et reflect.Type, edecoder decoderFunc) decoderFunc {
 				s.out.Set(reflect.New(t).Elem())
 				return true
 			}
-			s.err = ErrCollection
+			s.err = strconv.ErrSyntax
 			return false
 		}
 
@@ -318,12 +310,12 @@ func arrayDecoder(t, et reflect.Type, edecoder decoderFunc) decoderFunc {
 			}
 			v.Index(i).Set(s.out)
 			if !ok && i != t.Len()-1 {
-				s.err = ErrCollection
+				s.err = strconv.ErrSyntax
 				return false
 			}
 		}
 		if elems != "" {
-			s.err = ErrCollection
+			s.err = strconv.ErrSyntax
 			return false
 		}
 		out.Set(v)
@@ -353,7 +345,7 @@ func mapDecoder(t, kt, et reflect.Type, kdecoder, edecoder decoderFunc) decoderF
 			s.in, items, ok = cut(items, s.isep)
 			key, elem, pair := cut(s.in, s.psep)
 			if !pair {
-				s.err = ErrCollection
+				s.err = strconv.ErrSyntax
 				return false
 			}
 

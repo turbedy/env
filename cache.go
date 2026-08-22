@@ -18,12 +18,12 @@ func (e *TypeError) Error() string {
 }
 
 type field struct {
-	segment  string
-	required bool
-	leaf     bool
-	typ      reflect.Type
-	index    int
-	decoder  decoderFunc
+	segment string
+	require bool
+	leaf    bool
+	typ     reflect.Type
+	index   int
+	decoder decoderFunc
 }
 
 type metadata struct {
@@ -80,7 +80,7 @@ build:
 			}
 		}
 
-		required := false
+		require := false
 		for opts != "" {
 			var option string
 			option, opts, _ = strings.Cut(opts, ",")
@@ -91,8 +91,8 @@ build:
 					break build
 				}
 				segment = ""
-			case "required":
-				required = true
+			case "require":
+				require = true
 			default:
 				metadata.err = &TypeError{path, "unknown option"}
 				break build
@@ -106,12 +106,12 @@ build:
 		}
 
 		metadata.fields = append(metadata.fields, field{
-			segment:  segment,
-			required: required,
-			leaf:     leaf,
-			typ:      ft,
-			index:    i,
-			decoder:  decoder,
+			segment: segment,
+			require: require,
+			leaf:    leaf,
+			typ:     ft,
+			index:   i,
+			decoder: decoder,
 		})
 	}
 
