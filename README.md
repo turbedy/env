@@ -39,7 +39,7 @@ if err := env.Decode(&cfg); err != nil {
 }
 ```
 
-You can see the full documentation at [pkg.go.dev](https://pkg.go.dev/github.com/turbedy/env).
+You can see the full documentation at [pkg.go.dev](https://pkg.go.dev/github.com/turbedy/env/v2).
 
 ## License
 This project is licensed under the [BSD-3-Clause](LICENSE).
