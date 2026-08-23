@@ -1,4 +1,6 @@
 // Package env maps environment variables to structs.
+//
+// Deprecated: use github.com/turbedy/env/v2 instead.
 package env
 
 import "reflect"
