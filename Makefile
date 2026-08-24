@@ -1,7 +1,9 @@
+GOLANGCI_VERSION ?= v2.12.0
+
 .PHONY: setup
 setup: ## Install tools
-	@echo ">> install golangci-lint"
-	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.12.0
+	@echo ">> install golangci"
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_VERSION)
 
 .PHONY: test
 test: ## Run unit tests
