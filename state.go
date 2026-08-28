@@ -52,12 +52,11 @@ func (s *state) push(f field) {
 }
 
 func (s *state) pop() {
-	delete(s.seen, s.typs[len(s.typs)-1])
-	s.typs = s.typs[:len(s.typs)-1]
-
 	if len(s.typs) == s.req {
 		s.req = -1
 	}
+	delete(s.seen, s.typs[len(s.typs)-1])
+	s.typs = s.typs[:len(s.typs)-1]
 	s.key.pop()
 }
 
